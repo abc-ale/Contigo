@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Contigo"
+description = "Plataforma de acompañamiento para adultos mayores: clientes solicitan servicios, administradores gestionan trabajadores y solicitudes, y los servicios finalizados reciben reseñas de cinco estrellas."
+version = "1.0.0"
+id = "artifacts/contigo-platform"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24054
+
+[services.development]
+run = "pnpm --filter @workspace/contigo-platform run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/contigo-platform", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/contigo-platform/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24054"
+BASE_PATH = "/"

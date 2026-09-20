@@ -1,0 +1,462 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 1.0.0
+  description: API de Contigo para acompañamiento de adultos mayores.
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+  - name: auth
+  - name: dashboard
+  - name: seniors
+  - name: workers
+  - name: services
+  - name: requests
+  - name: reviews
+  - name: backups
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Iniciar sesión
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Sesión iniciada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSession"
+        "401":
+          description: Credenciales inválidas
+  /auth/register:
+    post:
+      operationId: registerClient
+      tags: [auth]
+      summary: Registrar cliente
+      description: El registro público solo crea cuentas CLIENTE_DECISOR. Los trabajadores y administradores se crean desde el panel de administrador.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientRegisterInput"
+      responses:
+        "201":
+          description: Cliente creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSession"
+        "409":
+          description: Correo ya registrado
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      security: [{ bearerAuth: [] }]
+      summary: Obtener usuario actual
+      responses:
+        "200":
+          description: Usuario actual
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [dashboard]
+      security: [{ bearerAuth: [] }]
+      summary: Resumen según rol
+      responses:
+        "200":
+          description: Resumen del panel
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+  /seniors:
+    get:
+      operationId: listSeniors
+      tags: [seniors]
+      security: [{ bearerAuth: [] }]
+      summary: Listar adultos mayores del cliente
+      responses:
+        "200":
+          description: Adultos mayores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Senior"
+    post:
+      operationId: createSenior
+      tags: [seniors]
+      security: [{ bearerAuth: [] }]
+      summary: Registrar adulto mayor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SeniorInput"
+      responses:
+        "201":
+          description: Adulto mayor creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Senior"
+  /workers:
+    get:
+      operationId: listWorkers
+      tags: [workers]
+      security: [{ bearerAuth: [] }]
+      summary: Listar trabajadores
+      responses:
+        "200":
+          description: Trabajadores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Worker"
+    post:
+      operationId: createWorker
+      tags: [workers]
+      security: [{ bearerAuth: [] }]
+      summary: Crear trabajador
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkerInput"
+      responses:
+        "201":
+          description: Trabajador creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Worker"
+  /services:
+    get:
+      operationId: listServices
+      tags: [services]
+      security: [{ bearerAuth: [] }]
+      summary: Catálogo de servicios
+      responses:
+        "200":
+          description: Servicios disponibles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ServiceOption"
+  /requests:
+    get:
+      operationId: listRequests
+      tags: [requests]
+      security: [{ bearerAuth: [] }]
+      summary: Listar solicitudes visibles para el usuario
+      responses:
+        "200":
+          description: Solicitudes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ServiceRequest"
+    post:
+      operationId: createRequest
+      tags: [requests]
+      security: [{ bearerAuth: [] }]
+      summary: Crear solicitud de servicio
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestInput"
+      responses:
+        "201":
+          description: Solicitud creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceRequest"
+  /requests/{requestId}/status:
+    patch:
+      operationId: updateRequestStatus
+      tags: [requests]
+      security: [{ bearerAuth: [] }]
+      summary: Actualizar estado de solicitud
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StatusInput"
+      responses:
+        "200":
+          description: Solicitud actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceRequest"
+  /requests/{requestId}/assign:
+    patch:
+      operationId: assignRequest
+      tags: [requests]
+      security: [{ bearerAuth: [] }]
+      summary: Asignar trabajador
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignmentInput"
+      responses:
+        "200":
+          description: Solicitud asignada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceRequest"
+  /reviews:
+    post:
+      operationId: createReview
+      tags: [reviews]
+      security: [{ bearerAuth: [] }]
+      summary: Reseñar un servicio finalizado
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewInput"
+      responses:
+        "201":
+          description: Reseña creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+  /backups/requests.xlsx:
+    get:
+      operationId: downloadRequestsBackup
+      tags: [backups]
+      security: [{ bearerAuth: [] }]
+      summary: Descargar respaldo Excel
+      responses:
+        "200":
+          description: Archivo Excel
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    RequestId:
+      name: requestId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string }
+    User:
+      type: object
+      required: [id, email, fullName, role]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        fullName: { type: string }
+        phone: { type: ["string", "null"] }
+        dni: { type: ["string", "null"] }
+        role:
+          type: string
+          enum: [CLIENTE_DECISOR, PERSONAL_ACOMPANANTE, ADMINISTRADOR]
+    AuthSession:
+      type: object
+      required: [token, user]
+      properties:
+        token: { type: string }
+        user: { $ref: "#/components/schemas/User" }
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 6 }
+    ClientRegisterInput:
+      type: object
+      required: [email, password, fullName]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 6 }
+        fullName: { type: string, minLength: 2 }
+        phone: { type: ["string", "null"] }
+        dni: { type: ["string", "null"], pattern: "^[0-9]{8}$" }
+    WorkerInput:
+      type: object
+      required: [email, password, fullName, phone, dni]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 6 }
+        fullName: { type: string, minLength: 2 }
+        phone: { type: string }
+        dni: { type: string, pattern: "^[0-9]{8}$" }
+        skills: { type: ["string", "null"] }
+        backgroundChecked: { type: boolean, default: false }
+    Senior:
+      type: object
+      required: [id, fullName, age]
+      properties:
+        id: { type: string, format: uuid }
+        fullName: { type: string }
+        age: { type: integer }
+        medicalNotes: { type: ["string", "null"] }
+        emergencyContact: { type: ["string", "null"] }
+    SeniorInput:
+      type: object
+      required: [fullName, age]
+      properties:
+        fullName: { type: string, minLength: 2 }
+        age: { type: integer, minimum: 60, maximum: 130 }
+        medicalNotes: { type: ["string", "null"] }
+        emergencyContact: { type: ["string", "null"] }
+    Worker:
+      type: object
+      required: [id, fullName, email, phone, dni, status, skills, rating]
+      properties:
+        id: { type: string, format: uuid }
+        fullName: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        dni: { type: string }
+        status: { type: string, enum: [DISPONIBLE, EN_SERVICIO, INACTIVO] }
+        skills: { type: ["string", "null"] }
+        backgroundChecked: { type: boolean }
+        rating: { type: number }
+        completedServices: { type: integer }
+    ServiceOption:
+      type: object
+      required: [id, label, description]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        description: { type: string }
+    RequestInput:
+      type: object
+      required: [seniorId, serviceType, scheduledAt, durationHours, pickupAddress]
+      properties:
+        seniorId: { type: string, format: uuid }
+        serviceType: { type: string, enum: [CITA_MEDICA, TRAMITE, COMPRAS, TECNOLOGIA, RECREACION] }
+        scheduledAt: { type: string, format: date-time }
+        durationHours: { type: number, minimum: 0.5, maximum: 24 }
+        pickupAddress: { type: string, minLength: 3 }
+        destinationAddress: { type: ["string", "null"] }
+        notes: { type: ["string", "null"] }
+    StatusInput:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [SOLICITADO, ASIGNADO, EN_CURSO, FINALIZADO, CANCELADO] }
+    AssignmentInput:
+      type: object
+      required: [workerId]
+      properties:
+        workerId: { type: string, format: uuid }
+    ServiceRequest:
+      type: object
+      required: [id, serviceType, serviceLabel, status, scheduledAt, durationHours, pickupAddress, clientName, seniorName, workerName, rating]
+      properties:
+        id: { type: string, format: uuid }
+        serviceType: { type: string }
+        serviceLabel: { type: string }
+        status: { type: string }
+        scheduledAt: { type: string, format: date-time }
+        durationHours: { type: number }
+        pickupAddress: { type: string }
+        destinationAddress: { type: ["string", "null"] }
+        notes: { type: ["string", "null"] }
+        clientName: { type: string }
+        seniorName: { type: string }
+        workerId: { type: ["string", "null"], format: uuid }
+        workerName: { type: ["string", "null"] }
+        rating: { type: ["integer", "null"], minimum: 1, maximum: 5 }
+        reviewComment: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+    ReviewInput:
+      type: object
+      required: [requestId, rating]
+      properties:
+        requestId: { type: string, format: uuid }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: ["string", "null"] }
+    Review:
+      type: object
+      required: [id, requestId, rating]
+      properties:
+        id: { type: string, format: uuid }
+        requestId: { type: string, format: uuid }
+        rating: { type: integer }
+        comment: { type: ["string", "null"] }
+    Dashboard:
+      type: object
+      required: [role, stats, recentRequests]
+      properties:
+        role: { type: string }
+        stats:
+          type: object
+          required: [totalRequests, pendingRequests, activeServices, averageRating]
+          properties:
+            totalRequests: { type: integer }
+            pendingRequests: { type: integer }
+            activeServices: { type: integer }
+            averageRating: { type: number }
+        recentRequests:
+          type: array
+          items:
+            $ref: "#/components/schemas/ServiceRequest"
